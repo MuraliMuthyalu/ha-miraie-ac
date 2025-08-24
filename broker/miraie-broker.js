@@ -9,6 +9,7 @@ const CMD_TYPES = {
   MODE: 'mode',
   TEMPERATURE: 'temp',
   FAN: 'fan'
+  ACDC: 'acdc'
 };
 
 const brokerDetails = {
@@ -44,14 +45,16 @@ const getCommandType = topic => {
   if (topic.endsWith('/mode/set')) {
     return CMD_TYPES.MODE;
   }
-
   if (topic.endsWith('/temp/set')) {
     return CMD_TYPES.TEMPERATURE;
   }
-
   if (topic.endsWith('/fan/set')) {
     return CMD_TYPES.FAN;
   }
+  if (topic.endsWith('/control')) {
+    return CMD_TYPES.ACDC;
+  }
+  return undefined;
 };
 
 const generateModeMessages = (basePayload, command, topic) => {
@@ -109,6 +112,15 @@ const generateMessages = (topic, command, cmdType, basePayload) => {
       return generateTemperatureMessage(basePayload, command.toLowerCase(), topic);
     case CMD_TYPES.FAN:
       return generateFanMessage(basePayload, command.toLowerCase(), topic);
+    case CMD_TYPES.ACDC:
+      return [{
+        topic,
+        payload: {
+          ...basePayload,
+          lcmd: 'acdc',
+          acdc: command
+        }
+      }];
   }
   return [];
 };

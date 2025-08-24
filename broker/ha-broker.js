@@ -13,15 +13,62 @@ const publishMessage = (topic, payload) => {
   mqttClient.publish(topic, payload, 0, false, onPublishCompleted);
 };
 
+
+
+
+
+// const publishDisoveryMessages = () => {
+//   discoveredDevices.map(d => {
+//     const messages = mqttDisco.generateDiscoMessage(d);
+    
+//     messages.map(m => {
+//       publishMessage(m.topic, m.payload);
+//     });
+//   });
+// };
+
+
+
 const publishDisoveryMessages = () => {
   discoveredDevices.map(d => {
     const messages = mqttDisco.generateDiscoMessage(d);
+    
+    // Add acdc switch discovery message
+    const switchMsg = {
+      topic: `homeassistant/switch/${d.friendlyName}_led/config`,
+      payload: JSON.stringify({
+        name: `${d.friendlyName} LED`,
+        unique_id: `${d.friendlyName}_led`,
+        state_topic: `miraie-ac/${d.friendlyName}/state`,
+        command_topic: `miraie-ac/${d.friendlyName}/control`,
+        payload_on: JSON.stringify({ acdc: 'on' }),
+        payload_off: JSON.stringify({ acdc: 'off' }),
+        state_on: 'on',
+        state_off: 'off',
+        value_template: '{{ value_json.acdc }}',
+        device: {
+          identifiers: [d.friendlyName],
+          name: d.friendlyName,
+          manufacturer: 'Panasonic',
+          model: 'MirAIe AC'
+        }
+      })
+    };
+    messages.push(switchMsg);
     
     messages.map(m => {
       publishMessage(m.topic, m.payload);
     });
   });
 };
+
+
+
+
+
+
+
+
 
 const onConnected = () => {
   Logger.logInfo('HA broker connected.');
